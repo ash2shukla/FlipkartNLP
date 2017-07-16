@@ -1,0 +1,7 @@
+1. scrape juta from flipkart.
+2. save juta information in SQL database
+3. save meta information of Juta in MongoDB
+4. give it to NodeJS through Django REST
+5. NodeJS gives it to Angular through Express
+6. NodeJS saves client info in Redis
+7. NodeJS also serves Android
