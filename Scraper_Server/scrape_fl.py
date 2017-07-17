@@ -3,8 +3,20 @@ from bs4 import BeautifulSoup as bs
 from pprint import pprint
 from PhantomSource import PhantomSource
 
+
 class ScrapeFL:
-    def scrapeJuta(self,string):
+    def __init__(self):
+        self.Progress = 0
+
+    def getPID(self,string):
+        try:
+            start = string.index("pid=")
+            end = string.index('&')
+            return string[start+4:end]
+        except:
+            return ''
+
+    def scrapeProduct(self,string):
         URL_Base = "https://www.flipkart.com"
         URL = "https://www.flipkart.com/search?q=" + string
         soup = bs(get(URL).text)
@@ -12,15 +24,11 @@ class ScrapeFL:
 
         all_results = [ {'title':i['title'],'link':URL_Base+i['href'],'pid':self.getPID(i['href'])} for i in soup.findAll('a',{'class':rectify}) ]
 
-        '''all_results = []
-        for i in soup.findAll('a',{'class':rectify}):
-            dic={}
-            dic['title']=i['title']
-            dic['href']=i['href']
-            all_results.append(dic)
-        '''
-        print all_results
+        print "Found Results for The Query = "+str(len(all_results))
         for i in all_results:
+            print str(all_results.index(i))+" "+i['title']
+        for i in all_results:
+            print("Scraping Data for Product ="+i['title'])
             pprint(self.scrapeIndividual(get(i['link']).text))
 
     def scrapeIndividual(self,string):
@@ -53,15 +61,8 @@ class ScrapeFL:
         self.getReviews(URL_Base+URL_review)
         return retval
 
-    def getPID(self,string):
-        try:
-            start = string.index("pid=")
-            end = string.index('&')
-            return string[start+4:end]
-        except:
-            return ''
-
     def getReviews(self,reviewURL):
+        retval = []
         soup = bs(PhantomSource().getSource(reviewURL))
         p_class = "_3v8VuN"
         try:
@@ -72,9 +73,18 @@ class ScrapeFL:
             parts = reviewURL.split('?')
         else:
             parts = reviewURL.split('?page=1')
+
+        print("Pages Found "+str(p_no+1))
+        if(p_no > 10 ):
+            print("How many pages to scrape ?")
+            p_no = input()
+
         for i in range(1,p_no+1):
             URL = ('?page='+str(i)).join(parts)
-            self.getReviewPerPage(URL)
+            print("Getting Reviews Of Page "+str(i))
+            retval += self.getReviewPerPage(URL)
+        print("Reviewing Done")
+        return retval
 
     def getReviewPerPage(self,reviewURL):
         soup = bs(PhantomSource().getSource(reviewURL))
@@ -89,7 +99,8 @@ class ScrapeFL:
                 dic['heading'] = i
                 dic['review'] = j
                 retval.append(dic)
+        return retval
 
 
 if __name__ == "__main__":
-        ScrapeFL().getReviews('https://www.flipkart.com/pede-milan-loafers/product-reviews/itmegbum8sytnw9c?page=1&pid=SHOEGBUZBNH4CVEY')
+        pprint(ScrapeFL().scrapeProduct('Juta'))
