@@ -2,11 +2,12 @@ from requests import get
 from bs4 import BeautifulSoup as bs
 from pprint import pprint
 from PhantomSource import PhantomSource
-
+from toDB import toDB
 
 class ScrapeFL:
+    URL_Base = "https://www.flipkart.com"
     def __init__(self):
-        self.Progress = 0
+        self.toDB = toDB()
 
     def getPID(self,string):
         try:
@@ -17,23 +18,39 @@ class ScrapeFL:
             return ''
 
     def scrapeProduct(self,string):
-        URL_Base = "https://www.flipkart.com"
         URL = "https://www.flipkart.com/search?q=" + string
         soup = bs(get(URL).text)
+        p_class = "_3v8VuN"
+        try:
+            p_no = int(soup.find('span',{'class':p_class}).span.findAll('span')[3].string.replace(',',''))
+        except:
+            p_no = 0
+        print "Pages Found = "+str(p_no)
+        for i in range(p_no+1):
+            data = self.extractProductNames(URL+"&page="+str(i+1))
+            print '\n'.join([str(data.index(j)) + ". "+j['title'] for j in data])
+            print "More results ? press enter. Else give index of your product."
+            inp = raw_input()
+            if ( inp == ''):
+                continue
+            else:
+                data  = self.scrapeIndividual(data[int(inp)])
+                break
+        self.toDB.insertSpecs(data[0])
+        for i in data[1]:
+            self.toDB.insertReviews(i)
+
+
+    def extractProductNames(self,URL_product):
         rectify = "_2cLu-l"
+        soup = bs(get(URL_product).text)
+        all_results = [ {'title':i['title'],'link':self.URL_Base+i['href'],'pid':self.getPID(i['href'])} for i in soup.findAll('a',{'class':rectify}) ]
+        return all_results
 
-        all_results = [ {'title':i['title'],'link':URL_Base+i['href'],'pid':self.getPID(i['href'])} for i in soup.findAll('a',{'class':rectify}) ]
-
-        print "Found Results for The Query = "+str(len(all_results))
-        for i in all_results:
-            print str(all_results.index(i))+" "+i['title']
-        for i in all_results:
-            print("Scraping Data for Product ="+i['title'])
-            pprint(self.scrapeIndividual(get(i['link']).text))
-
-    def scrapeIndividual(self,string):
-        URL_Base = "https://www.flipkart.com"
-        soup = bs(string)
+    def scrapeIndividual(self,Object_individual):
+        soup = bs(get(Object_individual['link']).text)
+        PID = Object_individual['pid']
+        P_name = Object_individual['title']
         in_spec_class = "_2Kp3n6"
         in_spec_name = "HoUsOy"
         key_class = "vmXPri col col-3-12"
@@ -58,15 +75,17 @@ class ScrapeFL:
             for j,k in zip(all_keys,all_values):
                 dic[j]=k
             retval[sub_name] = dic
-        self.getReviews(URL_Base+URL_review)
-        return retval
+        retval['title'] =P_name
+        retval['PID'] = PID
+        return [retval,self.getReviews(self.URL_Base+URL_review,PID)]
 
-    def getReviews(self,reviewURL):
+
+    def getReviews(self,reviewURL,PID):
         retval = []
         soup = bs(PhantomSource().getSource(reviewURL))
         p_class = "_3v8VuN"
         try:
-            p_no =  int(soup.find('span',{'class':p_class}).span.findAll('span')[3].string)
+            p_no =  int(soup.find('span',{'class':p_class}).span.findAll('span')[3].string.replace(',',''))
         except:
             p_no = 0
         if reviewURL[reviewURL.index('?')+1:reviewURL.index('?')+5] != 'page':
@@ -79,14 +98,14 @@ class ScrapeFL:
             print("How many pages to scrape ?")
             p_no = input()
 
-        for i in range(1,p_no+1):
-            URL = ('?page='+str(i)).join(parts)
-            print("Getting Reviews Of Page "+str(i))
-            retval += self.getReviewPerPage(URL)
+        for i in range(p_no):
+            URL = ('?page='+str(i+1)+"&").join(parts)
+            print("Getting Reviews Of Page "+str(i+1))
+            retval += self.getReviewPerPage(URL,PID)
         print("Reviewing Done")
         return retval
 
-    def getReviewPerPage(self,reviewURL):
+    def getReviewPerPage(self,reviewURL,PID):
         soup = bs(PhantomSource().getSource(reviewURL))
         box_class = "_3DCdKt"
         heading_class = "_2xg6Ul"
@@ -98,9 +117,10 @@ class ScrapeFL:
                 dic ={}
                 dic['heading'] = i
                 dic['review'] = j
+                dic['PID'] = PID
                 retval.append(dic)
         return retval
 
 
 if __name__ == "__main__":
-        pprint(ScrapeFL().scrapeProduct('Juta'))
+        ScrapeFL().scrapeProduct('Juta')
