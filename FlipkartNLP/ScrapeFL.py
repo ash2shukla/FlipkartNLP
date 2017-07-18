@@ -56,11 +56,16 @@ class ScrapeFL:
         key_class = "vmXPri col col-3-12"
         value_class = "sNqDog"
         review_class = "swINJg _3nrCtb"
+        rating_class = "_1i0wk8"
         retval = {}
 
         URL_review = soup.find('div',{'class':review_class}).parent['href']
 
         data =  soup.findAll('div',{'class':in_spec_class})
+        try:
+            rating = soup.find('div',{'class':rating_class}).string
+        except:
+            rating = 0
 
         for i in data:
             try:
@@ -77,6 +82,8 @@ class ScrapeFL:
             retval[sub_name] = dic
         retval['title'] =P_name
         retval['PID'] = PID
+        retval['rating'] = rating
+
         return [retval,self.getReviews(self.URL_Base+URL_review,PID)]
 
 
@@ -93,7 +100,7 @@ class ScrapeFL:
         else:
             parts = reviewURL.split('?page=1')
 
-        print("Pages Found "+str(p_no+1))
+        print("Pages Found "+str(p_no))
         if(p_no > 10 ):
             print("How many pages to scrape ?")
             p_no = input()
@@ -110,17 +117,25 @@ class ScrapeFL:
         box_class = "_3DCdKt"
         heading_class = "_2xg6Ul"
         review_class = "qwjRop"
-        heading = [i.string for i in soup.findAll('p',{'class':heading_class})]
-        review =  [i.div.div.string for i in soup.findAll('div',{'class':review_class})]
+        span_class = "_1_BQL8"
+
+        blocks = soup.findAll('div',{'class':box_class})
+        heading = [ i.find('p',{'class':heading_class}).string for i in blocks ]
+        review =  [ i.find('div',{'class':review_class}).div.div.string for i in blocks ]
+        thumbs_up = [ i.findAll('span',{'class':span_class})[0].string for i in blocks ]
+        thumbs_down = [ i.findAll('span',{'class':span_class})[1].string for i in blocks ]
+
         retval = []
-        for i,j in zip(heading,review):
+
+        for i,j,k,m in zip(heading,review,thumbs_up,thumbs_down):
                 dic ={}
                 dic['heading'] = i
                 dic['review'] = j
                 dic['PID'] = PID
+                dic['up'] = k
+                dic['down'] = m
                 retval.append(dic)
         return retval
-
 
 if __name__ == "__main__":
         ScrapeFL().scrapeProduct('Juta')
