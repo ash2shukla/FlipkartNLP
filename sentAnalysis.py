@@ -5,8 +5,8 @@ from math import log,exp
 
 class Analyse:
     def __init__(self,PID):
-        self.client = MongoClient("mongodb://192.168.0.11:27017").FlipNLP.Product_Reviews
-        self.info = MongoClient("mongodb://192.168.0.11:27017").FlipNLP.Product_Info
+        self.client = MongoClient("mongodb://127.0.0.1:27017").FlipNLP.Product_Reviews
+        self.info = MongoClient("mongodb://127.0.0.1:27017").FlipNLP.Product_Info
         self.PID = PID
 
     def getRating(self):
@@ -33,11 +33,15 @@ class Analyse:
                 retval.append(sentiment + sentiment*factor)
             except:
                 pass
-        return sum(retval)/len(retval)
-
+        try:
+            return sum(retval)/len(retval)
+        except:
+            return 0
     def predictRating(self):
         at_10 = self.averageSentiment()
         to_5 = at_10*5
+        if at_10 == 0:
+            to_5 = self.getRating()
         rating = self.getRating()
         if rating == 0:
             return to_5
@@ -46,4 +50,4 @@ class Analyse:
 
 
 if __name__ == "__main__":
-    print Analyse('SHOEREHEFXTHEBJN').predictRating()
+    print Analyse('SHOEBPPVPHZF5YYX').predictRating()

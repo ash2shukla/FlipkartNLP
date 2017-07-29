@@ -3,7 +3,7 @@ from pymongo import MongoClient
 class toDB:
     def __init__(self):
         try:
-            URL = "mongodb://192.168.0.11:27017"
+            URL = "mongodb://127.0.0.1:27017"
             self.client = MongoClient(URL)
             self.FlipNLP = self.client.FlipNLP
         except:
