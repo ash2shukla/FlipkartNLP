@@ -22,7 +22,7 @@ class ScrapeFL:
         soup = bs(get(URL).text)
         p_class = "_3v8VuN"
         try:
-            p_no = int(soup.find('span',{'class':p_class}).span.findAll('span')[3].string.replace(',',''))
+            p_no =  int(soup.find('span',{'class':p_class}).span.contents[1].split(' ')[3].replace(',',''))
         except:
             p_no = 0
         print "Pages Found = "+str(p_no)
@@ -92,7 +92,7 @@ class ScrapeFL:
         soup = bs(PhantomSource().getSource(reviewURL))
         p_class = "_3v8VuN"
         try:
-            p_no =  int(soup.find('span',{'class':p_class}).span.findAll('span')[3].string.replace(',',''))
+            p_no =  int(soup.find('span',{'class':p_class}).span.contents[1].split(' ')[3].replace(',',''))
         except:
             p_no = 0
         if reviewURL[reviewURL.index('?')+1:reviewURL.index('?')+5] != 'page':
