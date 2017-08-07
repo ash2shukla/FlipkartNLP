@@ -45,6 +45,12 @@ class ScrapeFL:
         rectify = "_2cLu-l"
         soup = bs(get(URL_product).text)
         all_results = [ {'title':i['title'],'link':self.URL_Base+i['href'],'pid':self.getPID(i['href'])} for i in soup.findAll('a',{'class':rectify}) ]
+        if all_results == []:
+            total = "col _2-gKeQ"
+            title = "_3wU53n"
+            link = "_1UoZlX"
+            all_results = [{'title':i.find('div',{'class':title}).string,'link':self.URL_Base+i.find('a',{'class':link})['href'],'pid':self.getPID(i.find('a',{'class':link})['href'])} for i in soup.findAll('div',{'class':total})]
+        print all_results
         return all_results
 
     def scrapeIndividual(self,Object_individual):
@@ -138,4 +144,4 @@ class ScrapeFL:
         return retval
 
 if __name__ == "__main__":
-        ScrapeFL().scrapeProduct('Juta')
+        ScrapeFL().scrapeProduct('mobile')
